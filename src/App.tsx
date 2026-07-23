@@ -33,12 +33,17 @@ function App() {
     <div style={{ padding: "20px", maxWidth: "500px" }}>
       <h1>Socket.IO Chat</h1>
 
-      <input
-        type="text"
-        placeholder="Enter a message..."
-        value={message}
-        onChange={(e) => setMessage(e.target.value)}
-      />
+<input
+  type="text"
+  placeholder="Enter a message..."
+  value={message}
+  onChange={(e) => setMessage(e.target.value)}
+  onKeyDown={(e) => {
+    if (e.key === "Enter") {
+      sendMessage();
+    }
+  }}
+/>
 
       <button onClick={sendMessage}>Send Message</button>
 
