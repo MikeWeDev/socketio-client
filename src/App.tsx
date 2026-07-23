@@ -9,9 +9,6 @@ function App() {
 
   useEffect(() => {
     socket.on("connect", () => {
-      console.log("Connected!");
-      console.log("Socket ID:", socket.id);
-
       setConnected(true);
     });
 
@@ -50,6 +47,7 @@ function App() {
 
       <h1>Socket.IO Chat</h1>
 
+
       <p>
         Status: {connected ? "🟢 Connected" : "🔴 Disconnected"}
       </p>
@@ -73,7 +71,9 @@ function App() {
       </button>
 
 
-      <h3>Messages</h3>
+      <h3>
+        Messages ({messages.length})
+      </h3>
 
 
       <ul>
