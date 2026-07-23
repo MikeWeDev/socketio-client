@@ -30,25 +30,23 @@ function App() {
   };
 
   return (
-    <div>
-      <h1>Chat App</h1>
+    <div style={{ padding: "20px", maxWidth: "500px" }}>
+      <h1>Socket.IO Chat</h1>
 
       <input
         type="text"
-        placeholder="Type a message..."
+        placeholder="Enter a message..."
         value={message}
         onChange={(e) => setMessage(e.target.value)}
       />
 
-      <button onClick={sendMessage}>
-        Send
-      </button>
+      <button onClick={sendMessage}>Send Message</button>
+
+      <h3>Messages</h3>
 
       <ul>
         {messages.map((msg, index) => (
-          <li key={index}>
-            {msg}
-          </li>
+          <li key={index}>{msg}</li>
         ))}
       </ul>
     </div>
