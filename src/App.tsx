@@ -24,6 +24,9 @@ function App() {
   const sendMessage = () => {
     if (!message.trim()) return;
 
+    // show message immediately for sender
+    setMessages((prev) => [...prev, message]);
+
     socket.emit("message", message);
 
     setMessage("");
@@ -33,25 +36,29 @@ function App() {
     <div style={{ padding: "20px", maxWidth: "500px" }}>
       <h1>Socket.IO Chat</h1>
 
-<input
-  type="text"
-  placeholder="Enter a message..."
-  value={message}
-  onChange={(e) => setMessage(e.target.value)}
-  onKeyDown={(e) => {
-    if (e.key === "Enter") {
-      sendMessage();
-    }
-  }}
-/>
+      <input
+        type="text"
+        placeholder="Enter a message..."
+        value={message}
+        onChange={(e) => setMessage(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            sendMessage();
+          }
+        }}
+      />
 
-      <button onClick={sendMessage}>Send Message</button>
+      <button onClick={sendMessage}>
+        Send Message
+      </button>
 
       <h3>Messages</h3>
 
       <ul>
         {messages.map((msg, index) => (
-          <li key={index}>{msg}</li>
+          <li key={index}>
+            {msg}
+          </li>
         ))}
       </ul>
     </div>
