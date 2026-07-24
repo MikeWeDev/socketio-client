@@ -43,7 +43,7 @@ function App() {
 
 
   return (
-    <div style={{ padding: "20px", maxWidth: "500px" }}>
+    <div style={{ padding: "40px", maxWidth: "500px" }}>
 
       <h1>Socket.IO Chat</h1>
 
