@@ -5,6 +5,7 @@ type ChatMessage = {
   username: string;
   text: string;
   time: string;
+  system?: boolean;
 };
 
 function App() {
@@ -40,6 +41,12 @@ function App() {
       socket.off("online-users");
     };
   }, []);
+
+  useEffect(() => {
+    if (joined) {
+      socket.emit("join", username);
+    }
+  }, [joined, username]);
 
   const sendMessage = () => {
     if (!message.trim()) return;
@@ -124,21 +131,41 @@ function App() {
               marginBottom: "12px",
               borderBottom: "1px solid #ddd",
               paddingBottom: "8px",
+              color: msg.system ? "#666" : "inherit",
+              fontStyle: msg.system ? "italic" : "normal",
             }}
           >
-            <strong>{msg.username}</strong>
+            {msg.system ? (
+              <>
+                <span>{msg.text}</span>
 
-            <span
-              style={{
-                marginLeft: "10px",
-                fontSize: "12px",
-                color: "gray",
-              }}
-            >
-              {msg.time}
-            </span>
+                <span
+                  style={{
+                    marginLeft: "10px",
+                    fontSize: "12px",
+                    color: "gray",
+                  }}
+                >
+                  {msg.time}
+                </span>
+              </>
+            ) : (
+              <>
+                <strong>{msg.username}</strong>
 
-            <div>{msg.text}</div>
+                <span
+                  style={{
+                    marginLeft: "10px",
+                    fontSize: "12px",
+                    color: "gray",
+                  }}
+                >
+                  {msg.time}
+                </span>
+
+                <div>{msg.text}</div>
+              </>
+            )}
           </li>
         ))}
       </ul>
