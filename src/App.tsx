@@ -14,6 +14,7 @@ function App() {
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [connected, setConnected] = useState(false);
+  const [onlineUsers, setOnlineUsers] = useState(0);
 
   useEffect(() => {
     socket.on("connect", () => {
@@ -28,10 +29,15 @@ function App() {
       setMessages((prev) => [...prev, message]);
     });
 
+    socket.on("online-users", (count: number) => {
+      setOnlineUsers(count);
+    });
+
     return () => {
       socket.off("connect");
       socket.off("disconnect");
       socket.off("message");
+      socket.off("online-users");
     };
   }, []);
 
@@ -84,6 +90,10 @@ function App() {
       <h1>Socket.IO Chat</h1>
 
       <p>Status: {connected ? "🟢 Connected" : "🔴 Disconnected"}</p>
+
+      <p>
+        <strong>Users Online:</strong> {onlineUsers}
+      </p>
 
       <p>
         Logged in as: <strong>{username}</strong>
