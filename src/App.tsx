@@ -4,6 +4,7 @@ import socket from "./socket";
 type ChatMessage = {
   username: string;
   text: string;
+  time: string;
 };
 
 function App() {
@@ -40,6 +41,10 @@ function App() {
     const newMessage: ChatMessage = {
       username,
       text: message,
+      time: new Date().toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+      }),
     };
 
     setMessages((prev) => [...prev, newMessage]);
@@ -96,16 +101,34 @@ function App() {
         }}
       />
 
-      <button onClick={sendMessage}>
-        Send Message
-      </button>
+      <button onClick={sendMessage}>Send Message</button>
 
       <h3>Messages ({messages.length})</h3>
 
-      <ul>
+      <ul style={{ padding: 0 }}>
         {messages.map((msg, index) => (
-          <li key={index}>
-            <strong>{msg.username}:</strong> {msg.text}
+          <li
+            key={index}
+            style={{
+              listStyle: "none",
+              marginBottom: "12px",
+              borderBottom: "1px solid #ddd",
+              paddingBottom: "8px",
+            }}
+          >
+            <strong>{msg.username}</strong>
+
+            <span
+              style={{
+                marginLeft: "10px",
+                fontSize: "12px",
+                color: "gray",
+              }}
+            >
+              {msg.time}
+            </span>
+
+            <div>{msg.text}</div>
           </li>
         ))}
       </ul>
