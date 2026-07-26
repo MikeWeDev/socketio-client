@@ -291,7 +291,7 @@ const styles = {
   joinCard: {
     background: "#1f2937",
     padding: "40px",
-    borderRadius: "20px",
+    borderRadius: "25px",
     width: "350px",
     textAlign: "center" as const,
     color: "white",
@@ -347,6 +347,7 @@ const styles = {
     borderRadius: "15px",
     maxWidth: "70%",
     marginBottom: "15px",
+    boxShadow: "0 4px 12px rgba(0,0,0,.25)"
   },
 
 
