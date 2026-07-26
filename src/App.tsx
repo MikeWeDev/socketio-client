@@ -309,8 +309,9 @@ const styles = {
 
 
   chatContainer: {
-    width: "600px",
-    height: "700px",
+    width: "90%",
+    maxWidth: "650px",
+    height: "85vh",
     background: "#111827",
     borderRadius: "20px",
     overflow: "hidden",
