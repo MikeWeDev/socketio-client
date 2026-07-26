@@ -117,15 +117,16 @@ function App() {
 
 
           <button
-            style={{
-              ...styles.button,
-              opacity: username.trim() ? 1 : 0.5,
-            }}
-            disabled={!username.trim()}
-            onClick={() => setJoined(true)}
-          >
-            Join Chat
-          </button>
+  style={{
+    ...styles.sendButton,
+    opacity: message.trim() ? 1 : 0.5,
+    cursor: message.trim() ? "pointer" : "not-allowed",
+  }}
+  disabled={!message.trim()}
+  onClick={sendMessage}
+>
+  Send
+</button>
 
         </div>
 
