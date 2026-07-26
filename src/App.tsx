@@ -84,6 +84,7 @@ function App() {
     socket.emit("message", newMessage);
 
     setMessage("");
+    inputRef.current?.focus();
   };
 
 
