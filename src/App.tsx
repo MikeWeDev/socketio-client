@@ -72,23 +72,20 @@ function App() {
     }
   };
 
-  const sendMessage = () => {
-    if (!message.trim()) return;
+// Inside App.tsx -> sendMessage
+const sendMessage = () => {
+  if (!message.trim()) return;
 
-    const newMessage: ChatMessage = {
-      username,
-      text: message.trim(),
-      time: new Date().toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit",
-      }),
-    };
-
-    socket.emit("message", newMessage);
-
-    setMessage("");
-    inputRef.current?.focus();
+  const newMessage: ChatMessage = {
+    username,
+    text: message.trim(),
+    time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
   };
+
+  socket.emit("message", newMessage);
+  setMessage("");
+  inputRef.current?.focus();
+};
 
   if (!joined) {
     return (
