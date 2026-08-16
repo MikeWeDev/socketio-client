@@ -16,10 +16,12 @@ function App() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [connected, setConnected] = useState(socket.connected);
   const [onlineUsers, setOnlineUsers] = useState(0);
+  const [typingUser, setTypingUser] = useState<string | null>(null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const joinInputRef = useRef<HTMLInputElement>(null);
+  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     if (!joined) {
@@ -47,16 +49,26 @@ function App() {
       setOnlineUsers(count);
     }
 
+    function onUserTyping(data: { username: string; isTyping: boolean }) {
+      if (data.isTyping) {
+        setTypingUser(data.username);
+      } else {
+        setTypingUser(null);
+      }
+    }
+
     socket.on("connect", onConnect);
     socket.on("disconnect", onDisconnect);
     socket.on("message", onMessage);
     socket.on("online-users", onOnlineUsers);
+    socket.on("user-typing", onUserTyping);
 
     return () => {
       socket.off("connect", onConnect);
       socket.off("disconnect", onDisconnect);
       socket.off("message", onMessage);
       socket.off("online-users", onOnlineUsers);
+      socket.off("user-typing", onUserTyping);
     };
   }, [joined, username]);
 
@@ -70,7 +82,21 @@ function App() {
     messagesEndRef.current?.scrollIntoView({
       behavior: "smooth",
     });
-  }, [messages]);
+  }, [messages, typingUser]);
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setMessage(e.target.value);
+
+    socket.emit("typing", true);
+
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+    }
+
+    typingTimeoutRef.current = setTimeout(() => {
+      socket.emit("typing", false);
+    }, 2000);
+  };
 
   const handleJoin = () => {
     if (username.trim()) {
@@ -87,6 +113,11 @@ function App() {
 
   const sendMessage = () => {
     if (!message.trim()) return;
+
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+    }
+    socket.emit("typing", false);
 
     const newMessage: ChatMessage = {
       username,
@@ -152,10 +183,7 @@ function App() {
           <div style={styles.status}>
             <span>{connected ? "🟢 Online" : "🔴 Offline"}</span>
             <span>👥 {onlineUsers}</span>
-            <button
-              onClick={handleLeave}
-              style={styles.leaveButton}
-            >
+            <button onClick={handleLeave} style={styles.leaveButton}>
               Leave
             </button>
           </div>
@@ -187,6 +215,12 @@ function App() {
             </div>
           ))}
 
+          {typingUser && (
+            <div style={styles.typingIndicator}>
+              ✍️ <em>{typingUser} is typing...</em>
+            </div>
+          )}
+
           <div ref={messagesEndRef} />
         </div>
 
@@ -196,7 +230,7 @@ function App() {
             style={styles.messageInput}
             placeholder="Type a message..."
             value={message}
-            onChange={(e) => setMessage(e.target.value)}
+            onChange={handleInputChange}
             onKeyDown={(e) => {
               if (e.key === "Enter") {
                 sendMessage();
@@ -303,6 +337,11 @@ const styles = {
     color: "#9ca3af",
     margin: "15px",
     fontStyle: "italic",
+  },
+  typingIndicator: {
+    color: "#9ca3af",
+    fontSize: "13px",
+    marginBottom: "10px",
   },
   inputArea: {
     display: "flex",
