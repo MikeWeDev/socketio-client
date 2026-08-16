@@ -21,7 +21,6 @@ function App() {
   const inputRef = useRef<HTMLInputElement>(null);
   const joinInputRef = useRef<HTMLInputElement>(null);
 
-  // Auto-focus username input when on join screen
   useEffect(() => {
     if (!joined) {
       joinInputRef.current?.focus();
@@ -77,6 +76,13 @@ function App() {
     if (username.trim()) {
       setJoined(true);
     }
+  };
+
+  const handleLeave = () => {
+    socket.disconnect();
+    setJoined(false);
+    setMessages([]);
+    socket.connect();
   };
 
   const sendMessage = () => {
@@ -146,6 +152,12 @@ function App() {
           <div style={styles.status}>
             <span>{connected ? "🟢 Online" : "🔴 Offline"}</span>
             <span>👥 {onlineUsers}</span>
+            <button
+              onClick={handleLeave}
+              style={styles.leaveButton}
+            >
+              Leave
+            </button>
           </div>
         </header>
 
@@ -335,6 +347,16 @@ const styles = {
     border: "none",
     background: "#2563eb",
     color: "white",
+  },
+  leaveButton: {
+    padding: "6px 12px",
+    borderRadius: "8px",
+    border: "none",
+    background: "#ef4444",
+    color: "white",
+    cursor: "pointer",
+    fontSize: "12px",
+    fontWeight: "bold",
   },
 } satisfies Record<string, React.CSSProperties>;
 
