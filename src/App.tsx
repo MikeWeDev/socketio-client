@@ -19,11 +19,18 @@ function App() {
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const joinInputRef = useRef<HTMLInputElement>(null);
+
+  // Auto-focus username input when on join screen
+  useEffect(() => {
+    if (!joined) {
+      joinInputRef.current?.focus();
+    }
+  }, [joined]);
 
   useEffect(() => {
     function onConnect() {
       setConnected(true);
-      // Re-emit join if the user was already in the chat room before a disconnect
       if (joined && username.trim()) {
         socket.emit("join", username.trim());
       }
@@ -72,20 +79,23 @@ function App() {
     }
   };
 
-// Inside App.tsx -> sendMessage
-const sendMessage = () => {
-  if (!message.trim()) return;
+  const sendMessage = () => {
+    if (!message.trim()) return;
 
-  const newMessage: ChatMessage = {
-    username,
-    text: message.trim(),
-    time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+    const newMessage: ChatMessage = {
+      username,
+      text: message.trim(),
+      time: new Date().toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+      }),
+    };
+
+    socket.emit("message", newMessage);
+
+    setMessage("");
+    inputRef.current?.focus();
   };
-
-  socket.emit("message", newMessage);
-  setMessage("");
-  inputRef.current?.focus();
-};
 
   if (!joined) {
     return (
@@ -96,6 +106,7 @@ const sendMessage = () => {
           <p style={styles.subtitle}>Join the real-time conversation</p>
 
           <input
+            ref={joinInputRef}
             style={styles.input}
             placeholder="Your username..."
             value={username}
