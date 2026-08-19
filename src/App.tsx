@@ -104,14 +104,18 @@ function App() {
     }
   };
 
-  const handleLeave = () => {
-    socket.disconnect();
-    setJoined(false);
-    setMessages([]);
-    socket.connect();
-    setTypingUser(null);
-  };
+ const handleLeave = () => {
+  if (typingTimeoutRef.current) {
+    clearTimeout(typingTimeoutRef.current);
+    typingTimeoutRef.current = null;
+  }
 
+  socket.disconnect();
+  setJoined(false);
+  setMessages([]);
+  setTypingUser(null);
+  socket.connect();
+};
   const sendMessage = () => {
     if (!message.trim()) return;
 
