@@ -124,14 +124,14 @@ function App() {
     }
     socket.emit("typing", false);
 
-    const newMessage: ChatMessage = {
-      username,
-      text: message.trim(),
-      time: new Date().toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit",
-      }),
-    };
+   const newMessage: ChatMessage = {
+  username: username.trim(),
+  text: message.trim(),
+  time: new Date().toLocaleTimeString([], {
+    hour: "2-digit",
+    minute: "2-digit",
+  }),
+};
 
     socket.emit("message", newMessage);
 
