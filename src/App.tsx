@@ -109,6 +109,7 @@ function App() {
     setJoined(false);
     setMessages([]);
     socket.connect();
+    setTypingUser(null);
   };
 
   const sendMessage = () => {
