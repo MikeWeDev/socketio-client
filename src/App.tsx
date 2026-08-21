@@ -11,7 +11,6 @@ type ChatMessage = {
 function App() {
   const [username, setUsername] = useState("");
   const [joined, setJoined] = useState(false);
-
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [connected, setConnected] = useState(socket.connected);
@@ -28,17 +27,20 @@ function App() {
       joinInputRef.current?.focus();
     }
   }, [joined]);
+
   useEffect(() => {
-  return () => {
-    if (typingTimeoutRef.current) {
-      clearTimeout(typingTimeoutRef.current);
-    }
-  };
-}, []);
+    return () => {
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+        typingTimeoutRef.current = null;
+      }
+    };
+  }, []);
 
   useEffect(() => {
     function onConnect() {
       setConnected(true);
+
       if (joined && username.trim()) {
         socket.emit("join", username.trim());
       }
@@ -56,17 +58,22 @@ function App() {
       setOnlineUsers(count);
     }
 
-   function onUserTyping(data: { username: string; isTyping: boolean }) {
-  if (data.username === username.trim()) {
-    return;
-  }
+    function onUserTyping(data: {
+      username: string;
+      isTyping: boolean;
+    }) {
+      if (data.username === username.trim()) {
+        return;
+      }
 
-  if (data.isTyping) {
-    setTypingUser(data.username);
-  } else {
-    setTypingUser(null);
-  }
-}
+      if (data.isTyping) {
+        setTypingUser(data.username);
+      } else {
+        setTypingUser((currentTypingUser) =>
+          currentTypingUser === data.username ? null : currentTypingUser
+        );
+      }
+    }
 
     socket.on("connect", onConnect);
     socket.on("disconnect", onDisconnect);
@@ -86,8 +93,9 @@ function App() {
   useEffect(() => {
     if (joined && username.trim()) {
       socket.emit("join", username.trim());
+      inputRef.current?.focus();
     }
-  }, [joined]);
+  }, [joined, username]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({
@@ -96,7 +104,20 @@ function App() {
   }, [messages, typingUser]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setMessage(e.target.value);
+    const value = e.target.value;
+
+    setMessage(value);
+
+    if (!value.trim()) {
+      socket.emit("typing", false);
+
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+        typingTimeoutRef.current = null;
+      }
+
+      return;
+    }
 
     socket.emit("typing", true);
 
@@ -106,48 +127,57 @@ function App() {
 
     typingTimeoutRef.current = setTimeout(() => {
       socket.emit("typing", false);
+      typingTimeoutRef.current = null;
     }, 2000);
   };
 
   const handleJoin = () => {
-    if (username.trim()) {
-      setJoined(true);
-    }
+    const trimmedUsername = username.trim();
+
+    if (!trimmedUsername) return;
+
+    setUsername(trimmedUsername);
+    setJoined(true);
   };
-  
-const handleLeave = () => {
-  if (typingTimeoutRef.current) {
-    clearTimeout(typingTimeoutRef.current);
-    typingTimeoutRef.current = null;
-  }
 
-  socket.emit("typing", false);
-  socket.disconnect();
+  const handleLeave = () => {
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+      typingTimeoutRef.current = null;
+    }
 
-  setJoined(false);
-  setMessages([]);
-  setMessage("");
-  setTypingUser(null);
+    socket.emit("typing", false);
+    socket.disconnect();
 
-  socket.connect();
-};
+    setJoined(false);
+    setMessages([]);
+    setMessage("");
+    setTypingUser(null);
+    setOnlineUsers(0);
+
+    socket.connect();
+  };
 
   const sendMessage = () => {
-    if (!message.trim()) return;
+    const trimmedMessage = message.trim();
+
+    if (!trimmedMessage) return;
 
     if (typingTimeoutRef.current) {
       clearTimeout(typingTimeoutRef.current);
+      typingTimeoutRef.current = null;
     }
+
     socket.emit("typing", false);
 
-   const newMessage: ChatMessage = {
-  username: username.trim(),
-  text: message.trim(),
-  time: new Date().toLocaleTimeString([], {
-    hour: "2-digit",
-    minute: "2-digit",
-  }),
-};
+    const newMessage: ChatMessage = {
+      username: username.trim(),
+      text: trimmedMessage,
+      time: new Date().toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+      }),
+    };
 
     socket.emit("message", newMessage);
 
@@ -161,7 +191,9 @@ const handleLeave = () => {
         <div style={styles.joinCard}>
           <h1 style={styles.logo}>💬 ChatFlow</h1>
 
-          <p style={styles.subtitle}>Join the real-time conversation</p>
+          <p style={styles.subtitle}>
+            Join the real-time conversation
+          </p>
 
           <input
             ref={joinInputRef}
@@ -180,7 +212,9 @@ const handleLeave = () => {
             style={{
               ...styles.button,
               opacity: username.trim() ? 1 : 0.5,
-              cursor: username.trim() ? "pointer" : "not-allowed",
+              cursor: username.trim()
+                ? "pointer"
+                : "not-allowed",
             }}
             disabled={!username.trim()}
             onClick={handleJoin}
@@ -202,9 +236,16 @@ const handleLeave = () => {
           </div>
 
           <div style={styles.status}>
-            <span>{connected ? "🟢 Online" : "🔴 Offline"}</span>
+            <span>
+              {connected ? "🟢 Online" : "🔴 Offline"}
+            </span>
+
             <span>👥 {onlineUsers}</span>
-            <button onClick={handleLeave} style={styles.leaveButton}>
+
+            <button
+              onClick={handleLeave}
+              style={styles.leaveButton}
+            >
               Leave
             </button>
           </div>
@@ -221,8 +262,14 @@ const handleLeave = () => {
                 <div
                   style={{
                     ...styles.messageBubble,
-                    marginLeft: msg.username === username ? "auto" : "0",
-                    background: msg.username === username ? "#2563eb" : "#1f2937",
+                    marginLeft:
+                      msg.username === username.trim()
+                        ? "auto"
+                        : "0",
+                    background:
+                      msg.username === username.trim()
+                        ? "#2563eb"
+                        : "#1f2937",
                   }}
                 >
                   <div style={styles.messageHeader}>
@@ -263,7 +310,9 @@ const handleLeave = () => {
             style={{
               ...styles.sendButton,
               opacity: message.trim() ? 1 : 0.5,
-              cursor: message.trim() ? "pointer" : "not-allowed",
+              cursor: message.trim()
+                ? "pointer"
+                : "not-allowed",
             }}
             disabled={!message.trim()}
             onClick={sendMessage}
@@ -285,6 +334,7 @@ const styles = {
     alignItems: "center",
     fontFamily: "Arial, sans-serif",
   },
+
   joinPage: {
     minHeight: "100vh",
     background: "#111827",
@@ -293,6 +343,7 @@ const styles = {
     alignItems: "center",
     fontFamily: "Arial, sans-serif",
   },
+
   joinCard: {
     background: "#1f2937",
     padding: "40px",
@@ -301,14 +352,17 @@ const styles = {
     textAlign: "center",
     color: "white",
   },
+
   logo: {
     fontSize: "32px",
     margin: "0 0 10px 0",
   },
+
   subtitle: {
     color: "#9ca3af",
     marginBottom: "20px",
   },
+
   chatContainer: {
     width: "90%",
     maxWidth: "650px",
@@ -320,6 +374,7 @@ const styles = {
     display: "flex",
     flexDirection: "column",
   },
+
   header: {
     padding: "20px",
     background: "#1f2937",
@@ -328,16 +383,19 @@ const styles = {
     justifyContent: "space-between",
     alignItems: "center",
   },
+
   status: {
     display: "flex",
     gap: "15px",
     alignItems: "center",
   },
+
   messages: {
     flex: 1,
     overflowY: "auto",
     padding: "20px",
   },
+
   messageBubble: {
     color: "white",
     padding: "12px 16px",
@@ -346,6 +404,7 @@ const styles = {
     marginBottom: "15px",
     boxShadow: "0 4px 12px rgba(0,0,0,.25)",
   },
+
   messageHeader: {
     display: "flex",
     justifyContent: "space-between",
@@ -353,23 +412,27 @@ const styles = {
     fontSize: "12px",
     marginBottom: "5px",
   },
+
   systemMessage: {
     textAlign: "center",
     color: "#9ca3af",
     margin: "15px",
     fontStyle: "italic",
   },
+
   typingIndicator: {
     color: "#9ca3af",
     fontSize: "13px",
     marginBottom: "10px",
   },
+
   inputArea: {
     display: "flex",
     padding: "15px",
     gap: "10px",
     background: "#1f2937",
   },
+
   input: {
     width: "100%",
     padding: "14px",
@@ -382,6 +445,7 @@ const styles = {
     fontSize: "16px",
     boxSizing: "border-box",
   },
+
   messageInput: {
     flex: 1,
     padding: "14px",
@@ -392,6 +456,7 @@ const styles = {
     outline: "none",
     fontSize: "16px",
   },
+
   button: {
     width: "100%",
     padding: "14px",
@@ -401,6 +466,7 @@ const styles = {
     color: "white",
     fontWeight: "bold",
   },
+
   sendButton: {
     padding: "14px 20px",
     borderRadius: "10px",
@@ -408,6 +474,7 @@ const styles = {
     background: "#2563eb",
     color: "white",
   },
+
   leaveButton: {
     padding: "6px 12px",
     borderRadius: "8px",
