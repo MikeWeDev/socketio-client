@@ -107,19 +107,24 @@ function App() {
       setJoined(true);
     }
   };
-
- const handleLeave = () => {
+  
+const handleLeave = () => {
   if (typingTimeoutRef.current) {
     clearTimeout(typingTimeoutRef.current);
     typingTimeoutRef.current = null;
   }
 
+  socket.emit("typing", false);
   socket.disconnect();
+
   setJoined(false);
   setMessages([]);
+  setMessage("");
   setTypingUser(null);
+
   socket.connect();
 };
+
   const sendMessage = () => {
     if (!message.trim()) return;
 
