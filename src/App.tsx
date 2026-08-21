@@ -28,6 +28,13 @@ function App() {
       joinInputRef.current?.focus();
     }
   }, [joined]);
+  useEffect(() => {
+  return () => {
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+    }
+  };
+}, []);
 
   useEffect(() => {
     function onConnect() {
