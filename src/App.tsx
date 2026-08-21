@@ -49,13 +49,17 @@ function App() {
       setOnlineUsers(count);
     }
 
-    function onUserTyping(data: { username: string; isTyping: boolean }) {
-      if (data.isTyping) {
-        setTypingUser(data.username);
-      } else {
-        setTypingUser(null);
-      }
-    }
+   function onUserTyping(data: { username: string; isTyping: boolean }) {
+  if (data.username === username.trim()) {
+    return;
+  }
+
+  if (data.isTyping) {
+    setTypingUser(data.username);
+  } else {
+    setTypingUser(null);
+  }
+}
 
     socket.on("connect", onConnect);
     socket.on("disconnect", onDisconnect);
